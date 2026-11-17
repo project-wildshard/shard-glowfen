@@ -31,8 +31,14 @@ export const WATER_RADIUS = 196;
 /** The spirit lanterns: three within 25 m of the spawn so the goal reads at once (SS10d SHOULD 10), three out in the fen. */
 export const LANTERNS = [
   { x: -8, z: 58 }, { x: 9, z: 55 }, { x: 2, z: 47 },
-  { x: -46, z: 12 }, { x: 42, z: -14 }, { x: -22, z: -42 },
+  { x: -30, z: 20 }, { x: -14, z: -30 }, { x: 28, z: -8 },
 ];
+/** The lantern trail: the shortest walk from the spawn past every lantern to the shrine, kept clear of trees. */
+export const TRAIL = [SPAWN, LANTERNS[1], LANTERNS[2], LANTERNS[0], LANTERNS[3], LANTERNS[4], LANTERNS[5], SHRINE];
+const segDist = (x, z, a, b) => {
+  const dx = b.x - a.x, dz = b.z - a.z, t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+  return Math.hypot(x - a.x - dx * t, z - a.z - dz * t);
+};
 /** The main channel's centre line: it winds from the spawn bank to the shrine island. */
 export const channelX = (z) => Math.sin(z * 0.025) * 12;
 
@@ -88,6 +94,7 @@ export function mangroveSpots() {
     if (Math.hypot(x, z) > 165 || Math.abs(x - channelX(z)) < 10) continue;
     if (Math.hypot(x - SPAWN.x, z - SPAWN.z) < 18 || Math.hypot(x - SHRINE.x, z - SHRINE.z) < 20) continue;
     if (LANTERNS.some((l) => Math.hypot(x - l.x, z - l.z) < 9)) continue;
+    if (TRAIL.slice(1).some((b, k) => segDist(x, z, TRAIL[k], b) < 6)) continue;
     if (spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 7)) continue;
     spots.push([x, z, 0.8 + rand() * 0.8]);
   }
