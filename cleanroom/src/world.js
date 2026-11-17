@@ -49,7 +49,8 @@ export function groundHeight(x, z) {
   const r = Math.hypot(x, z);
   const pass = smooth(10, 30, Math.min(Math.abs(x), Math.abs(z)));
   const rim = smooth(170, 228, r) * pass * (2.5 + fbm(x * 0.02 + 9, z * 0.02, 3) * 7);
-  h = lerp(h, 0, smooth(196, 236, r) * (1 - pass)); // the road mouths settle to exactly 0 m
+  // the road mouths: exactly 0 m for the first 50 m in from each edge, 8 m wide and a lattice cell round it (the engine walks each entry 50 m)
+  h = lerp(h, 0, smooth(186, 197, r) * (1 - smooth(9, 18, Math.min(Math.abs(x), Math.abs(z)))));
   return h + rim;
 }
 /** Wet black mud below the water, moss green on the hummocks and the rim. */
