@@ -170,16 +170,26 @@ export function pads(part: THREE.Group, M: Materials): void {
   for (const [geos, mat] of [[pad, M.pad], [lotus, M.lotus], [reed, M.reed]] as const) part.add(new THREE.Mesh(merged(geos), mat));
 }
 
-/** The jetty by the spawn and the raft tied to it (a raft that moves is engine work: meta SHARD-SOURCE rows). */
+/** The jetty by the spawn; the raft tied to it is its own part (`raft`), a mover. */
 export function jetty(part: THREE.Group, M: Materials): void {
   const planks: THREE.BufferGeometry[] = [];
   for (let i = 0; i < 12; i++) planks.push(new THREE.BoxGeometry(2.2, 0.08, 0.32).translate(5.5, 0.55, 70 - i * 0.36));
   for (const [x, z] of [[4.5, 70], [6.5, 70], [4.5, 66.2], [6.5, 66.2]] as const) planks.push(new THREE.CylinderGeometry(0.09, 0.09, 1.6, 6).translate(x, 0, z));
-  const raft: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < 6; i++) raft.push(new THREE.CylinderGeometry(0.16, 0.16, 3.2, 8).rotateZ(Math.PI / 2).translate(0, 0.1, (i - 2.5) * 0.33));
-  const raftGeo = merged(raft).rotateY(0.25).translate(8.6, WATER_LEVEL + 0.08, 64.5);
-  const mesh = new THREE.Mesh(merged([...planks, raftGeo]), M.plank); mesh.castShadow = true; mesh.receiveShadow = true; part.add(mesh);
+  const mesh = new THREE.Mesh(merged(planks), M.plank); mesh.castShadow = true; mesh.receiveShadow = true; part.add(mesh);
   const deck = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.4), M.plank); deck.position.set(5.5, 0.3, 68); deck.visible = false; part.add(solid(deck));
+}
+
+/** Where the raft is tied, and the channel it rides to the shrine island: points on the channel's centre line. */
+const RAFT = { x: 8.6, y: WATER_LEVEL + 0.18, z: 64.5 };
+export const RAFT_PATH: readonly (readonly [number, number, number])[] = [50, 30, 10, -10, -30, -54].map((z) => [Math.round(channelX(z) * 100) / 100, RAFT.y, z] as const);
+
+/** The raft by the jetty (SHARD-SOURCE SS-GF2a): six logs and a deck to stand on. Stand on it and it rides the channel
+ *  to the shrine island in 45 s; step off and it waits; it comes back the same way. */
+export function raft(part: THREE.Group, M: Materials): void {
+  const logs: THREE.BufferGeometry[] = [];
+  for (let i = 0; i < 6; i++) logs.push(new THREE.CylinderGeometry(0.16, 0.16, 3.2, 8).rotateZ(Math.PI / 2).translate(0, 0.1, (i - 2.5) * 0.33));
+  const mesh = new THREE.Mesh(merged(logs).rotateY(0.25).translate(RAFT.x, WATER_LEVEL + 0.08, RAFT.z), M.plank); mesh.castShadow = true; mesh.receiveShadow = true; part.add(mesh);
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.32, 2), M.plank); deck.position.set(RAFT.x, WATER_LEVEL + 0.18, RAFT.z); deck.rotation.y = 0.25; deck.visible = false; part.add(solid(deck));
 }
 
 /** The lantern shrine on its island: a stone ring of six sockets around a rune stone with the great lantern bowl. */
@@ -214,6 +224,37 @@ export function lanterns(part: THREE.Group, M: Materials): void {
     part.add(animate(lamp, flicker({ rate: 1 + i * 0.13, amount: 0.12 })));
   });
   part.add(new THREE.Mesh(merged(globes), M.lantern), new THREE.Mesh(merged(cages), M.plank));
+}
+
+/**
+ * SS-GF1a2: the shrine's six posts are sockets. Setting a spirit lantern on one (its prompt) writes that player's own
+ * `glowfen.socket.N`, and the post's globe glows for them alone (a panel shown by that player field, never solid).
+ */
+export function sockets(world: ShardWorld, M: Materials): void {
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2, x = SHRINE.x + Math.cos(a) * 5.4, z = SHRINE.z + Math.sin(a) * 5.4, id = `glowfen.socket.${String(i + 1)}`;
+    world.part(`socket-${String(i + 1)}`, (part) => {
+      const at = new THREE.Object3D(); at.position.set(x, 1.6, z); part.add(at);
+      world.interact(id, at, { label: 'Set a spirit lantern', radius: 2.5, sets: { field: id, scope: 'player', value: true } });
+    });
+    world.part(`socket-${String(i + 1)}-glow`, (part) => {
+      part.add(new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), M.lantern).translateX(x).translateY(3.3).translateZ(z));
+    }, { panel: `${id}.glow`, shownWhen: { field: id, equals: true } });
+  }
+}
+
+/**
+ * SS-GF2b: the one shrine every player fills together. Each offer adds a light to the shared `glowfen.shrine.lights`
+ * (up to six, then the prompt is spent), and at six the flame over the dome burns for everyone (a shared panel).
+ */
+export function shrineFlame(world: ShardWorld, M: Materials): void {
+  world.part('shrine-offer', (part) => {
+    const at = new THREE.Object3D(); at.position.set(SHRINE.x, 1.6, SHRINE.z + 1.8); part.add(at);
+    world.interact('glowfen.shrine.offer', at, { label: 'Offer a spirit light', radius: 2.5, sets: { field: 'glowfen.shrine.lights', scope: 'shared', add: 1, max: 6 } });
+  });
+  world.part('shrine-flame', (part) => {
+    part.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 14), M.lantern).translateX(SHRINE.x).translateY(5.4).translateZ(SHRINE.z));
+  }, { panel: 'glowfen.shrine.flame', shownWhen: { field: 'glowfen.shrine.lights', equals: 6 } });
 }
 
 /** Fireflies over the channel and spores rising out of the canopy (the engine leaves both off on a phone). */
@@ -260,7 +301,10 @@ export function buildGlowfen(world: ShardWorld): void {
   world.part('glows', (part) => { glows(part); });
   world.part('pads', (part) => { pads(part, M); });
   world.part('jetty', (part) => { jetty(part, M); });
+  world.part('raft', (part) => { raft(part, M); }, { panel: 'glowfen.raft', mover: { path: RAFT_PATH, seconds: 45 } });
   world.part('shrine', (part) => { shrine(part, M); });
+  sockets(world, M);
+  shrineFlame(world, M);
   world.part('lanterns', (part) => { lanterns(part, M); });
   world.part('motes', (part) => { motes(part); });
   world.spawn(SPAWN.x, 1, SPAWN.z, SPAWN.yaw);

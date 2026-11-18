@@ -1,7 +1,8 @@
 // The lantern run (SHARD-SOURCE SS14b): "Light the shrine". Each spirit lantern is a region trigger that files its flag
 // when a player reaches it (the player gathers it); the shrine's trigger fires only once all six are gathered (`when`), and
-// that lights the shrine. Carrying a lantern as an item, the raft and a shrine several players fill together (the lantern
-// relay, SS10d SHOULD 9) have no host in the format yet: meta SHARD-SOURCE rows SS-GF1 and SS-GF2.
+// that lights the shrine. The shrine's posts are sockets that glow per player and its offer fills one shared flame
+// (world.ts `sockets`, `shrineFlame`); the raft rides the channel (SS-GF2a). Carrying a lantern (`world.pickup`) waits for
+// an engine whose author proof takes a pickup (meta SHARD-SOURCE SS-GF1a1c).
 import { LANTERNS, SHRINE } from './world';
 
 const flag = (i: number): string => `glowfen.lantern.${String(i + 1)}`;
