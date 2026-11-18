@@ -30,6 +30,8 @@ export const SHRINE = { x: 0, z: -70 };
 export const WATER_LEVEL = 0.05;
 export const WATER_RADIUS = 196;
 export interface Spot { readonly x: number; readonly z: number }
+/** SS-GF1a1b: the lantern every stand hands over: carried lit through the fen for ten minutes, refilled at any stand. */
+export const SPIRIT_LANTERN = { id: 'tool.spirit-lantern', name: 'Spirit lantern', blurb: 'A spirit lantern from the fen; any stand refills it.', colour: '#ffb347', intensity: 3, fuelSeconds: 600 } as const;
 /** The spirit lanterns: three within 25 m of the spawn so the goal reads at once (SS10d SHOULD 10), three out in the fen. */
 export const LANTERNS: readonly Spot[] = [
   { x: -8, z: 58 }, { x: 9, z: 55 }, { x: 2, z: 47 },
@@ -213,13 +215,16 @@ export function shrine(part: THREE.Group, M: Materials): void {
 }
 
 /** The spirit lanterns: a glowing globe in a small cage on a reed float, each with its warm lamp. */
-export function lanterns(part: THREE.Group, M: Materials): void {
+/** SS-GF1a1b: each spirit lantern hangs on its post as a pickup: E takes it into the kit, lit, and files its flag. */
+export function lanterns(part: THREE.Group, M: Materials, world: ShardWorld): void {
   const globes: THREE.BufferGeometry[] = [], cages: THREE.BufferGeometry[] = [];
   LANTERNS.forEach((l, i) => {
     const y = Math.max(WATER_LEVEL, groundHeight(l.x, l.z));
     globes.push(new THREE.SphereGeometry(0.28, 16, 12).translate(l.x, y + 1.3, l.z));
     cages.push(new THREE.TorusGeometry(0.3, 0.025, 4, 16).translate(l.x, y + 1.3, l.z), new THREE.TorusGeometry(0.3, 0.025, 4, 16).rotateY(Math.PI / 2).translate(l.x, y + 1.3, l.z),
       new THREE.CylinderGeometry(0.04, 0.05, 1.1, 6).translate(l.x, y + 0.55, l.z), new THREE.CylinderGeometry(0.45, 0.5, 0.12, 10).translate(l.x, y + 0.02, l.z));
+    const hook = new THREE.Object3D(); hook.position.set(l.x, y + 1.3, l.z); part.add(hook);
+    world.pickup(`glowfen.lantern.${String(i + 1)}`, hook, { label: 'Take the spirit lantern', radius: 2.5, item: SPIRIT_LANTERN, flag: `glowfen.lantern.${String(i + 1)}` });
     const lamp = new THREE.PointLight(new THREE.Color('#ffb347'), 8, 12, 2); lamp.position.set(l.x, y + 1.5, l.z);
     part.add(animate(lamp, flicker({ rate: 1 + i * 0.13, amount: 0.12 })));
   });
@@ -305,7 +310,7 @@ export function buildGlowfen(world: ShardWorld): void {
   world.part('shrine', (part) => { shrine(part, M); });
   sockets(world, M);
   shrineFlame(world, M);
-  world.part('lanterns', (part) => { lanterns(part, M); });
+  world.part('lanterns', (part) => { lanterns(part, M, world); });
   world.part('motes', (part) => { motes(part); });
   world.spawn(SPAWN.x, 1, SPAWN.z, SPAWN.yaw);
 }

@@ -1,8 +1,7 @@
-// The lantern run (SHARD-SOURCE SS14b): "Light the shrine". Each spirit lantern is a region trigger that files its flag
-// when a player reaches it (the player gathers it); the shrine's trigger fires only once all six are gathered (`when`), and
-// that lights the shrine. The shrine's posts are sockets that glow per player and its offer fills one shared flame
-// (world.ts `sockets`, `shrineFlame`); the raft rides the channel (SS-GF2a). Carrying a lantern (`world.pickup`) waits for
-// an engine whose author proof takes a pickup (meta SHARD-SOURCE SS-GF1a1c).
+// The lantern run (SHARD-SOURCE SS14b): "Light the shrine". Each spirit lantern is a pickup on its post (`world.pickup`,
+// SS-GF1a1b, in world.ts): E takes it into the kit, lit, and files its flag; the shrine's trigger fires only once all six
+// are gathered (`when`), and that lights the shrine. Sockets light per lantern (SS-GF1a2); the shrine several players fill
+// together is SS-GF2b; the raft down the channel is SS-GF2a.
 import { LANTERNS, SHRINE } from './world';
 
 const flag = (i: number): string => `glowfen.lantern.${String(i + 1)}`;
@@ -12,7 +11,6 @@ const gathered = LANTERNS.map((_, i) => flag(i));
 export const LANTERN_RUN = {
   flags: [...gathered, 'glowfen.shrine', 'glowfen.lit'],
   triggers: [
-    ...LANTERNS.map((l, i) => ({ id: flag(i), kind: 'region' as const, flag: flag(i), x: l.x, z: l.z, radius: 6 })),
     { id: 'glowfen.shrine', kind: 'region' as const, flag: 'glowfen.shrine', x: SHRINE.x, z: SHRINE.z, radius: 9, when: { all: gathered } },
   ],
   dialogue: [],
