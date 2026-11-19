@@ -231,6 +231,16 @@ export function lanterns(part: THREE.Group, M: Materials, world: ShardWorld): vo
   part.add(new THREE.Mesh(merged(globes), M.lantern), new THREE.Mesh(merged(cages), M.plank));
 }
 
+/** MZ32 (meta MOSSGATE-ZONE, QA 11-19 row 35: "I'm setting these lanterns and nothing happens"): a light laid on the
+ *  ground, three soft discs (a panel holds meshes only, so the glow is drawn: MZ34 brings real lamps to panels). */
+function glowPool(into: THREE.Group, x: number, y: number, z: number, radius: number, colour: string): void {
+  for (const [r, opacity, lift] of [[1, 0.22, 0.02], [0.66, 0.34, 0.03], [0.36, 0.5, 0.04]] as const) {
+    const material = new THREE.MeshStandardMaterial({ color: colour, emissive: colour, emissiveIntensity: 1.4, roughness: 1, transparent: true, opacity, depthWrite: false });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(radius * r, 32), material);
+    disc.rotation.x = -Math.PI / 2; disc.position.set(x, y + lift, z); into.add(disc);
+  }
+}
+
 /**
  * SS-GF1a2: the shrine's six posts are sockets. Setting a spirit lantern on one (its prompt) writes that player's own
  * `glowfen.socket.N`, and the post's globe glows for them alone (a panel shown by that player field, never solid).
@@ -244,6 +254,10 @@ export function sockets(world: ShardWorld, M: Materials): void {
     });
     world.part(`socket-${String(i + 1)}-glow`, (part) => {
       part.add(new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), M.lantern).translateX(x).translateY(3.3).translateZ(z));
+      // MZ32: a set lantern lights the island round its post, and its light stays
+      part.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.22, 2.4, 10), M.lantern).translateX(x).translateY(4.7).translateZ(z));
+      // on the shrine's stone platform (its top is 0.85 m), not the fen floor under it
+      glowPool(part, x, 0.86, z, 4.5, '#ffc46a');
     }, { panel: `${id}.glow`, shownWhen: { field: id, equals: true } });
   }
 }
@@ -259,6 +273,23 @@ export function shrineFlame(world: ShardWorld, M: Materials): void {
   });
   world.part('shrine-flame', (part) => {
     part.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 14), M.lantern).translateX(SHRINE.x).translateY(5.4).translateZ(SHRINE.z));
+    // MZ32, the finale: the full shrine lights the fen. A pillar of light over the dome, the island ringed in light, and every
+    // lantern's post and the trail back to the jetty glowing, so the whole run you walked is lit behind you.
+    part.add(new THREE.Mesh(new THREE.CylinderGeometry(0.35, 1.1, 26, 16, 1, true), M.lantern).translateX(SHRINE.x).translateY(19).translateZ(SHRINE.z));
+    glowPool(part, SHRINE.x, 0.86, SHRINE.z, 13, '#8ff0ff');
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2, x = SHRINE.x + Math.cos(a) * 9.5, z = SHRINE.z + Math.sin(a) * 9.5;
+      part.add(new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), M.lantern).translateX(x).translateY(Math.max(WATER_LEVEL, groundHeight(x, z)) + 0.5).translateZ(z));
+    }
+    for (const l of LANTERNS) glowPool(part, l.x, Math.max(WATER_LEVEL, groundHeight(l.x, l.z)), l.z, 7, '#ffc46a');
+    for (let leg = 0; leg < TRAIL.length - 1; leg++) {
+      const a = TRAIL[leg], b = TRAIL[leg + 1]; if (a === undefined || b === undefined) continue;
+      const n = Math.max(1, Math.round(Math.hypot(b.x - a.x, b.z - a.z) / 6));
+      for (let k = 1; k < n; k++) {
+        const x = a.x + ((b.x - a.x) * k) / n, z = a.z + ((b.z - a.z) * k) / n;
+        glowPool(part, x, Math.max(WATER_LEVEL, groundHeight(x, z)), z, 2.4, '#9ff4c8');
+      }
+    }
   }, { panel: 'glowfen.shrine.flame', shownWhen: { field: 'glowfen.shrine.lights', equals: 6 } });
 }
 
