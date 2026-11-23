@@ -35,7 +35,6 @@
     "@wildshard/cli": "0.4.12",
     "@wildshard/format": "npm:@wildshard/shard-format@0.43.0",
     "@wildshard/sdk": "0.4.12",
-    "@wildshard/sharddev": "npm:@wildshard/sdk@0.4.12",
     "three": "0.186.0"
   },
   "devDependencies": {
