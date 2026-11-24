@@ -32,9 +32,9 @@
     "check:bin-pins": "node kit/scripts/bin-pins.mjs"
   },
   "dependencies": {
-    "@wildshard/cli": "0.4.28",
+    "@wildshard/cli": "0.4.29",
     "@wildshard/format": "npm:@wildshard/shard-format@0.71.0",
-    "@wildshard/sdk": "0.4.28",
+    "@wildshard/sdk": "0.4.29",
     "three": "0.186.0",
     "@types/three": "0.186.0"
   },
