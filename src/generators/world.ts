@@ -194,8 +194,19 @@ export function raft(part: THREE.Group, M: Materials): void {
   const deck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.32, 2), M.plank); deck.position.set(RAFT.x, WATER_LEVEL + 0.18, RAFT.z); deck.rotation.y = 0.25; deck.visible = false; part.add(solid(deck));
 }
 
+/** FORMAT-PRUNE FP49: the shrine's glow, eased from the lantern run's flags: dim until a lantern is gathered, a step brighter
+ *  with each, full once the shrine is lit (`world.field`, format `weather.fields`). The shrine's light follows it. */
+export const GLOW = 'glowfen.glow';
+export function glowField(world: ShardWorld): void {
+  const gathered = LANTERNS.map((_, i) => `glowfen.lantern.${String(i + 1)}`);
+  world.field(GLOW, { quest: 'glowfen.lit', else: 0.2, rate: 0.15, steps: [
+    { when: { all: ['glowfen.lit'] }, value: 1 },
+    ...[6, 5, 4, 3, 2, 1].map((n) => ({ when: { count: { of: gathered, atLeast: n } }, value: Math.round((0.2 + n * 0.12) * 100) / 100 })),
+  ] });
+}
+
 /** The lantern shrine on its island: a stone ring of six sockets around a rune stone with the great lantern bowl. */
-export function shrine(part: THREE.Group, M: Materials): void {
+export function shrine(part: THREE.Group, M: Materials, world: ShardWorld): void {
   const stone: THREE.BufferGeometry[] = [], rune: THREE.BufferGeometry[] = [];
   stone.push(new THREE.CylinderGeometry(7, 7.6, 0.6, 24).translate(SHRINE.x, 0.55, SHRINE.z));
   stone.push(new THREE.CylinderGeometry(1.2, 1.5, 2.4, 8).translate(SHRINE.x, 2, SHRINE.z));
@@ -210,8 +221,11 @@ export function shrine(part: THREE.Group, M: Materials): void {
   const mesh = new THREE.Mesh(merged(stone), M.stone); mesh.castShadow = true; mesh.receiveShadow = true; part.add(mesh);
   part.add(new THREE.Mesh(merged(rune), M.rune));
   const core = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 2.6, 8), M.stone); core.position.set(SHRINE.x, 2.1, SHRINE.z); core.visible = false; part.add(solid(core));
-  const light = new THREE.PointLight(new THREE.Color('#7fe8ff'), 18, 22, 2); light.position.set(SHRINE.x, 4.6, SHRINE.z);
+  // FP49: the shrine's light is the page's own (`world.emitter`, format `light.emitters`): it wakes with the glow, from a
+  // fifth of its strength at the start to brighter than it ever stood once the shrine is lit
+  const light = new THREE.PointLight(new THREE.Color('#7fe8ff'), 26, 26, 2); light.position.set(SHRINE.x, 4.6, SHRINE.z);
   part.add(animate(light, flicker({ rate: 0.4, amount: 0.15 })));
+  world.emitter('glowfen.shrine', light, { field: GLOW });
 }
 
 /** The spirit lanterns: a glowing globe in a small cage on a reed float, each with its warm lamp. */
@@ -338,7 +352,8 @@ export function buildGlowfen(world: ShardWorld): void {
   world.part('pads', (part) => { pads(part, M); });
   world.part('jetty', (part) => { jetty(part, M); });
   world.part('raft', (part) => { raft(part, M); }, { panel: 'glowfen.raft', mover: { path: RAFT_PATH, seconds: 45 } });
-  world.part('shrine', (part) => { shrine(part, M); });
+  glowField(world);
+  world.part('shrine', (part) => { shrine(part, M, world); });
   sockets(world, M);
   shrineFlame(world, M);
   world.part('lanterns', (part) => { lanterns(part, M, world); });
