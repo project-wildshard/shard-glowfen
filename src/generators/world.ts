@@ -222,8 +222,8 @@ export function shrine(part: THREE.Group, M: Materials, world: ShardWorld): void
   part.add(new THREE.Mesh(merged(rune), M.rune));
   const core = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 2.6, 8), M.stone); core.position.set(SHRINE.x, 2.1, SHRINE.z); core.visible = false; part.add(solid(core));
   // FP49: the shrine's light is the page's own (`world.emitter`, format `light.emitters`): it wakes with the glow, from a
-  // fifth of its strength at the start to brighter than it ever stood once the shrine is lit
-  const light = new THREE.PointLight(new THREE.Color('#7fe8ff'), 26, 26, 2); light.position.set(SHRINE.x, 4.6, SHRINE.z);
+  // fifth of its strength at the start (dimmer than it used to stand) to the platform washed cyan once the shrine is lit
+  const light = new THREE.PointLight(new THREE.Color('#7fe8ff'), 70, 30, 2); light.position.set(SHRINE.x, 4.6, SHRINE.z);
   part.add(animate(light, flicker({ rate: 0.4, amount: 0.15 })));
   world.emitter('glowfen.shrine', light, { field: GLOW });
 }
