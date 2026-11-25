@@ -166,7 +166,8 @@ export function pads(part: THREE.Group, M: Materials): void {
   }
   for (let i = 0; i < 260; i++) {
     const z = lerp(-80, 80, rand()), side = rand() < 0.5 ? -1 : 1, x = channelX(z) + side * lerp(7, 11, rand());
-    const h = 0.8 + rand() * 1.2, g = new THREE.PlaneGeometry(0.08, h).translate(0, h / 2, 0).rotateZ((rand() - 0.5) * 0.4).rotateY(rand() * 3);
+    // a real reed (QA 11-24 row 54, J510): a tapering three-sided stalk, not a flat plane; same draws of the stream
+    const h = 0.8 + rand() * 1.2, g = new THREE.ConeGeometry(0.06, h, 3, 1, true).translate(0, h / 2, 0).rotateZ((rand() - 0.5) * 0.4).rotateY(rand() * 3);
     reed.push(g.translate(x, Math.max(WATER_LEVEL, groundHeight(x, z)) - 0.05, z));
   }
   for (const [geos, mat] of [[pad, M.pad], [lotus, M.lotus], [reed, M.reed]] as const) part.add(new THREE.Mesh(merged(geos), mat));
