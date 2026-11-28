@@ -1,11 +1,11 @@
 {
-  "content": "d5274b0f555fff93252122d245c4b17bb102d3069711cad24e482f771e6ac44a",
-  "captured": "2026-11-28T11:46:38.965Z",
+  "content": "c5229587d644d18e869a23776f220198049931a5dbfb83031f8a305302d7a2e9",
+  "captured": "2026-11-28T12:06:38.849Z",
   "base": "http://127.0.0.1:4791",
   "card": {
-    "card/thumb.jpg": "0cd8bc2a3a4a3183df4ef6484ddbac01aab7283228900beedfd5db86a8516637",
-    "card/portrait.jpg": "896138a0876c97ac94dcacf7d63f14280de457007b2e45817863635ab69b00be",
-    "card/landscape.jpg": "4d7c52ac227679358493133998b3386d9fdbf8578e9ab739e378dd39fb5c2517"
+    "card/thumb.jpg": "55a540e7b8ced4758fd6b4ff3584c5891b9fc475c07080fb08465ac5ed8cc79d",
+    "card/portrait.jpg": "2d481f0412e8ec0ec9f3167536819df9b80185eed27773420d3ddc0955fea4b7",
+    "card/landscape.jpg": "cfffbfc765d6e4829b18c1be76bea4a6e87f563729063ec9d0d9980ec77d1e49"
   },
   "look": "c98c2762a2d095ad5b0a97882a65a24dfd556377542c8539cbee9995de2f1633"
 }
