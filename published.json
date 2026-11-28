@@ -1,0 +1,9 @@
+{
+  "glowfen": {
+    "version": "0.0.9",
+    "revision": 9,
+    "hash": "28566f82d0aac636c5675d1789b9b04b247af4bab5e06e4722ff07a808365183",
+    "channel": "staging",
+    "commit": "ab47c1aae89036758592b46e6521b38b839ef00a"
+  }
+}
